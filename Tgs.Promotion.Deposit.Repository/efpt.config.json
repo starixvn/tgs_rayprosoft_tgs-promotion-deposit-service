@@ -1,0 +1,59 @@
+﻿{
+   "CodeGenerationMode": 2,
+   "ContextClassName": "TgsContext",
+   "ContextNamespace": "Entities",
+   "DefaultDacpacSchema": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": "Entities",
+   "OutputContextPath": "Entities",
+   "OutputPath": "Entities\\Models",
+   "ProjectRootNamespace": "Tgs.Promotion.Register.Repository",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 0,
+   "SelectedToBeGenerated": 0,
+   "Tables": [
+      {
+         "Name": "dbo.player_buckets",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotion_bonuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.transaction_promotions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotion_players",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotion_participants",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": "tgs",
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDbContextSplitting": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseLegacyPluralizer": true,
+   "UseManyToManyEntity": true,
+   "UseNoConstructor": true,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": true,
+   "UseSchemaFolders": true,
+   "UseSpatial": true
+}
