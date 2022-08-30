@@ -104,7 +104,7 @@ pipeline {
                         println node_selector
                         println autoscaling
 
-                        sh '''
+                        sh """
                             cat << EOF | yq e -P | helm template deployment/k8s/promotion-deposit-service \
                                 -n ${kube_ns} \
                                 --name-template tgs \
@@ -116,8 +116,8 @@ pipeline {
                                 "resources": $resources,
                                 "autoscaling": $autoscaling
                             }
-                        '''
-                        sh '''
+                        """
+                        sh """
                             cat << EOF | yq e -P | helm template deployment/k8s/promotion-deposit-service \
                                 -n ${kube_ns} \
                                 --set image.tag=${TAG} \
@@ -130,7 +130,7 @@ pipeline {
                                 "resources": $resources,
                                 "autoscaling": $autoscaling
                             }
-                        '''
+                        """
                     }
                 }
 			}
