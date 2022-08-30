@@ -12,8 +12,8 @@ image:
 
 imagePullSecrets: 
   - name: dockerhub
-nameOverride: "promotion-register-service"
-fullnameOverride: "promotion-register-service"
+nameOverride: "promotion-deposit-service"
+fullnameOverride: "promotion-deposit-service"
 
 serviceAccount:
   # Specifies whether a service account should be created
