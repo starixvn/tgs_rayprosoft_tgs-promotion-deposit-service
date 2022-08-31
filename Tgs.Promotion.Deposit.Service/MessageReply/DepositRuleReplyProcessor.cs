@@ -19,7 +19,7 @@ public class DepositRuleReplyProcessor : IMessageProcessor
 	{
 		var request = CampaignDetailRequest.Parser.ParseFrom(data.Span);
 
-		var settings = JsonSerializer.Deserialize<DepositGiftSetting>(request.Settings,
+		var settings = JsonSerializer.Deserialize<DepositRewardSetting>(request.Settings,
 			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
 		_logger.LogInformation($"Account deposit setting : {settings}");

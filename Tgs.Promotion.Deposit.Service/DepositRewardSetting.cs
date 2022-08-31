@@ -1,6 +1,6 @@
 ﻿namespace Tgs.Promotion.Deposit.Service;
 
-public class DepositGiftSetting
+public class DepositRewardSetting
 {
 	public decimal DepositMinimumLimit {get; set;}
 	public decimal Percentage {get; set;}
