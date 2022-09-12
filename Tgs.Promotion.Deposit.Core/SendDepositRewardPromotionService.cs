@@ -89,7 +89,7 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
                     PromotionBonusId = bonusId,
                     BonusAmount = bonusAmount,
                     SentOn = promotion.AutoSentPlayerBonus ? DateTimeOffset.UtcNow.UtcDateTime : null,
-					BucketAmountByManual = depositBonusAmount * rule.TurnoverMultiple - command.DepositAmount
+					BucketAmountByManual = depositBonusAmount * rule.TurnoverMultiple
                 }
             }.ToHashSet()
         };
@@ -102,7 +102,7 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
 	        {
 		        Id = Guid.NewGuid(),
 		        PlayerCode = command.PlayerCode,
-		        BucketAmount = depositBonusAmount * rule.TurnoverMultiple - command.DepositAmount,
+		        BucketAmount = depositBonusAmount * rule.TurnoverMultiple,
 		        BucketType = (short)BucketType.Promotion,
 		        IsFull = false,
 		        CreatedOn = DateTimeOffset.UtcNow.UtcDateTime
