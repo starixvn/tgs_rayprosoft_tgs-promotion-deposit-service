@@ -22,10 +22,10 @@ builder.Services
                 options.Url = config.GetConnectionString("Nats");
             })
             .AddProcessor<DepositRuleReplyProcessor>("tgs.promotion.depositreward.setting", "tgs.promotion.depositreward.setting")
-            .AddProcessor<DepositRewardMessageProcessor>("tgs.promotion.deposit.depositreward.distribute", "tgs.promotion.deposit.depositreward.distribute")
-            .AddProcessor<DepositMessageProcessor>("tgs.promotion.deposit.firstdeposit.distribute", "tgs.promotion.deposit.firstdeposit.distribute")
-            .AddProcessor<DepositMessageProcessor>("tgs.promotion.deposit.dailyfirstdeposit.distribute", "tgs.promotion.deposit.dailyfirstdeposit.distribute")
-            .AddProcessor<DepositMessageProcessor>("tgs.promotion.deposit.dailyseconddeposit.distribute", "tgs.promotion.deposit.dailyseconddeposit.distribute");
+            .AddProcessor<DepositRewardMessageProcessor>("tgs.promotion.depositreward.distribute", "tgs.promotion.depositreward.distribute")
+            .AddProcessor<DepositMessageProcessor>("tgs.promotion.firstdeposit.distribute", "tgs.promotion.firstdeposit.distribute")
+            .AddProcessor<DepositMessageProcessor>("tgs.promotion.dailyfirstdeposit.distribute", "tgs.promotion.dailyfirstdeposit.distribute")
+            .AddProcessor<DepositMessageProcessor>("tgs.promotion.dailyseconddeposit.distribute", "tgs.promotion.dailyseconddeposit.distribute");
     })
     .AddNatsGlobPatternExchange("*");
 
