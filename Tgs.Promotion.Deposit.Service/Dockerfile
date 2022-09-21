@@ -1,0 +1,25 @@
+#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR /src
+COPY ["nuget.config", "."]
+COPY ["Tgs.Promotion.Deposit.Service/Tgs.Promotion.Deposit.Service.csproj", "Tgs.Promotion.Deposit.Service/"]
+COPY ["Tgs.Promotion.Deposit.Core/Tgs.Promotion.Deposit.Core.csproj", "Tgs.Promotion.Deposit.Core/"]
+COPY ["Tgs.Promotion.Deposit.Repository/Tgs.Promotion.Deposit.Repository.csproj", "Tgs.Promotion.Deposit.Repository/"]
+RUN dotnet restore "Tgs.Promotion.Deposit.Service/Tgs.Promotion.Deposit.Service.csproj"
+COPY . .
+WORKDIR "/src/Tgs.Promotion.Deposit.Service"
+RUN dotnet build "Tgs.Promotion.Deposit.Service.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Tgs.Promotion.Deposit.Service.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Tgs.Promotion.Deposit.Service.dll"]
