@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Tgs.Payment.Clients;
 using Tgs.Promotion.Clients;
 using Tgs.ServiceUtility;
 
@@ -12,17 +13,19 @@ internal class
 	private readonly IPromotionBonusRepository _promotionBonusRepository;
 	private readonly IPromotionRepository _promotionRepository;
 	private readonly IPromotionServiceClient _promotionServiceClient;
-
+	private readonly IPaymentServiceClient _paymentServiceClient;
 	public SendDepositRewardPromotionService(
 		IPromotionRepository promotionRepository,
 		IPromotionBonusRepository promotionBonusRepository,
 		IPromotionServiceClient promotionServiceClient,
+		IPaymentServiceClient paymentServiceClient,
 		ILogger<SendDepositRewardPromotionService> logger)
 	{
 		_logger = logger;
 		_promotionRepository = promotionRepository;
 		_promotionBonusRepository = promotionBonusRepository;
 		_promotionServiceClient = promotionServiceClient;
+		_paymentServiceClient = paymentServiceClient;
 	}
 
 	public async ValueTask<SendDepositRewardPromotionResponse> GetAsync(
@@ -41,13 +44,24 @@ internal class
 			return new(null, 0);
 		}
 
+		var depositForm = await _paymentServiceClient.GetDepositFormAsync(command.FormId, cancellationToken).ConfigureAwait(false);
+
+		if (depositForm == null)
+		{
+			_logger.LogError($"depositForm is not found. ({command.FormId})");
+
+			return new(null, 0);
+		}
+
 		var rule = JsonSerializer.Deserialize<DepositRewardRule>(promotion.CampaignDetail,
 			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
-		if (rule.DepositMinimumLimit > command.DepositAmount)
+		var depositAmount = depositForm.ActualAmount ?? depositForm.Amount;
+
+		if (rule.DepositMinimumLimit > depositAmount)
 		{
 			_logger.LogError(
-				$"DepositAmount {command.DepositAmount} less then DepositMinimumLimit {rule.DepositMinimumLimit}. ({command.PromotionId})");
+				$"DepositAmount {depositAmount} less then DepositMinimumLimit {rule.DepositMinimumLimit}. ({command.PromotionId})");
 
 			return new(null, 0);
 		}
@@ -97,6 +111,6 @@ internal class
 			return new(promotionBonusPlayerId, bonusAmount);
 		}
 
-		return new(-1, bonusAmount);
+		return new(null, bonusAmount);
 	}
 }
