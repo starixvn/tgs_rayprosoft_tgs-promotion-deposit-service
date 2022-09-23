@@ -5,9 +5,9 @@ VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.Promotion.Deposit.Service", "Tgs.Promotion.Deposit.Service\Tgs.Promotion.Deposit.Service.csproj", "{D6D6E7E4-47AC-49C6-A236-7E7BAE911A3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tgs.Promotion.Deposit.Core", "Tgs.Promotion.Deposit.Core\Tgs.Promotion.Deposit.Core.csproj", "{50F6A47E-FADA-456F-B453-CB897923850B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.Promotion.Deposit.Core", "Tgs.Promotion.Deposit.Core\Tgs.Promotion.Deposit.Core.csproj", "{50F6A47E-FADA-456F-B453-CB897923850B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tgs.Promotion.Deposit.Repository", "Tgs.Promotion.Deposit.Repository\Tgs.Promotion.Deposit.Repository.csproj", "{F686720B-9393-4932-91DB-578D6886ECA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.Promotion.Deposit.Repository", "Tgs.Promotion.Deposit.Repository\Tgs.Promotion.Deposit.Repository.csproj", "{F686720B-9393-4932-91DB-578D6886ECA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

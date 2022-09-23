@@ -31,13 +31,22 @@ builder.Services
 
 // Add services to the container.
 builder.Services.AddTgsRepository(builder.Configuration.GetConnectionString("Tgs"))
+	.AddRedis((redisOptions, _)
+		=> redisOptions.ConnectionString = builder.Configuration.GetConnectionString("Redis"))
     .AddPromotionDepositCore()
     .AddCashServiceClient((options, sp) =>
     {
         var config = sp.GetRequiredService<IConfiguration>();
 
         options.BaseUrl = config.GetValue<Uri>("Promotion:CashBaseUrl");
-    });
+    })
+    .AddPromotionClientServices((options, sp) =>
+    {
+	    var config = sp.GetRequiredService<IConfiguration>();
+
+	    options.Url = config.GetValue<Uri>("Promotion:Url");
+    })
+	.AddMemoryCache();
 
 builder.Logging
     .AddOpenTelemetry(options =>

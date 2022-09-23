@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -9,11 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
     <PackageReference Include="Tgs.CashService.Client" Version="0.1.3" />
+    <PackageReference Include="Tgs.Promotion.Client" Version="1.0.25" />
     <PackageReference Include="TGS.ServiceUtility" Version="0.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Tgs.Promotion.Deposit.Repository\Tgs.Promotion.Deposit.Repository.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,4 +4,4 @@ public record DepositRewardRule(
     decimal BonusAmountLimit,
     decimal Percentage,
     decimal TurnoverMultiple,
-    decimal DepositMinimumAmount);
+    decimal DepositMinimumLimit);

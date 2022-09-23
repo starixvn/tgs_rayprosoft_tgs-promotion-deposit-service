@@ -1,137 +1,102 @@
 ﻿using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Tgs.CashService.Client;
-using Tgs.Promotion.Register.Repository.Entities;
+using Tgs.Promotion.Clients;
 using Tgs.ServiceUtility;
 
 namespace Tgs.Promotion.Deposit.Core;
 
-internal class SendDepositRewardPromotionService : IGetService<SendDepositRewardPromotion, SendDepositRewardPromotionResponse>
+internal class
+	SendDepositRewardPromotionService : IGetService<SendDepositRewardPromotion, SendDepositRewardPromotionResponse>
 {
 	private readonly ILogger<SendDepositRewardPromotionService> _logger;
-    private readonly TgsContext _tgsContext;
-    private readonly ICashServiceClient _cashServiceClient;
+	private readonly IPromotionBonusRepository _promotionBonusRepository;
+	private readonly IPromotionRepository _promotionRepository;
+	private readonly IPromotionServiceClient _promotionServiceClient;
 
 	public SendDepositRewardPromotionService(
-        TgsContext tgsContext,
-        ICashServiceClient cashServiceClient,
+		IPromotionRepository promotionRepository,
+		IPromotionBonusRepository promotionBonusRepository,
+		IPromotionServiceClient promotionServiceClient,
 		ILogger<SendDepositRewardPromotionService> logger)
 	{
 		_logger = logger;
-        _tgsContext = tgsContext;
-        _cashServiceClient = cashServiceClient;
-    }
+		_promotionRepository = promotionRepository;
+		_promotionBonusRepository = promotionBonusRepository;
+		_promotionServiceClient = promotionServiceClient;
+	}
 
-    public async ValueTask<SendDepositRewardPromotionResponse> GetAsync(
-        SendDepositRewardPromotion command,
-        CancellationToken cancellationToken = default)
-    {
-        var depositBonusAmount = command.DepositAmount;
+	public async ValueTask<SendDepositRewardPromotionResponse> GetAsync(
+		SendDepositRewardPromotion command,
+		CancellationToken cancellationToken = default)
+	{
+		var depositBonusAmount = command.DepositAmount;
 
-        var promotion = await _tgsContext.Promotions.FirstOrDefaultAsync(x => x.Id == command.PromotionId, cancellationToken);
+		var promotion = await _promotionRepository.GetPromotionWithCacheAsync(command.PromotionId)
+			.ConfigureAwait(false);
 
-        if (promotion == null)
-        {
-            _logger.LogError($"promotion is not found. ({command.PromotionId})");
+		if (promotion == null)
+		{
+			_logger.LogError($"promotion is not found. ({command.PromotionId})");
 
-            return new SendDepositRewardPromotionResponse(null,0);
-        }
+			return new(null, 0);
+		}
 
-        var rule = JsonSerializer.Deserialize<DepositRewardRule>(promotion.CampaignDetail)!;
+		var rule = JsonSerializer.Deserialize<DepositRewardRule>(promotion.CampaignDetail,
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
-        if (rule.DepositMinimumAmount > command.DepositAmount)
-        {
-            _logger.LogError($"DepositAmount {command.DepositAmount} less then DepositMinimumAmount {rule.DepositMinimumAmount}. ({command.PromotionId})");
+		if (rule.DepositMinimumLimit > command.DepositAmount)
+		{
+			_logger.LogError(
+				$"DepositAmount {command.DepositAmount} less then DepositMinimumLimit {rule.DepositMinimumLimit}. ({command.PromotionId})");
 
-            return new SendDepositRewardPromotionResponse(null,0);
-        }
+			return new(null, 0);
+		}
 
-        var bonusAmount = rule.Percentage * command.DepositAmount / 100M;
+		var bonusAmount = rule.Percentage * command.DepositAmount / 100M;
 
-        bonusAmount = bonusAmount > rule.BonusAmountLimit
-            ? rule.BonusAmountLimit
-            : bonusAmount;
+		bonusAmount = bonusAmount > rule.BonusAmountLimit
+			? rule.BonusAmountLimit
+			: bonusAmount;
 
-        depositBonusAmount += bonusAmount;
+		depositBonusAmount += bonusAmount;
 
-        var now = DateTimeOffset.Now.ToOffset(new(8, 0, 0));
+		var totalAmount = await _promotionRepository.IncreaseToTotalAmountAsync(promotion.Id, (long)bonusAmount);
 
-        var reportDate = new DateTimeOffset(now.Year,
-            now.Month,
-            now.Day,
-            0,
-            0,
-            0,
-            now.Offset);
+		if (promotion.Unlimited == 1 ||
+		    totalAmount - bonusAmount <= promotion.TotalAmountLimit)
+		{
+			var bucketAmount = depositBonusAmount * rule.TurnoverMultiple;
 
-        var bonusId = Guid.NewGuid();
+			var (bonusId, promotionBonusPlayerId) = await _promotionBonusRepository.CreatePromotionBonusAsync(promotion,
+				command.PlayerCode, bonusAmount,
+				bucketAmount, cancellationToken);
 
-        var bonus = new PromotionBonus
-        {
-            Id = bonusId,
-            BrandId = command.BrandId,
-            PromotionId = promotion.Id,
-            From = reportDate.UtcDateTime,
-            To = reportDate.UtcDateTime,
-            PromotionType = promotion.PromotionType,
-            TotalAmountLimit = promotion.TotalAmountLimit,
-            GameType = promotion.GameType,
-            Percentage = promotion.Percentage,
-            BonusAmountLimit = promotion.BonusAmountLimit,
-            TurnoverMultiple = promotion.TurnoverMultiple,
-            CreatedOn = DateTimeOffset.UtcNow.UtcDateTime,
-            PromotionPlayers = new[]
-            {
-                new PromotionPlayer
-                {
-                    PlayerCode = command.PlayerCode,
-                    PromotionBonusId = bonusId,
-                    BonusAmount = bonusAmount,
-                    SentOn = promotion.AutoSentPlayerBonus ? DateTimeOffset.UtcNow.UtcDateTime : null,
-					BucketAmountByManual = depositBonusAmount * rule.TurnoverMultiple
-                }
-            }.ToHashSet()
-        };
+			if (promotion.AutoSentPlayerBonus)
+			{
+				_logger.LogInformation("total amount record: {JsonSerializer.Serialize(totalAmount)}",
+					JsonSerializer.Serialize(promotion.AmountUsed + bonusAmount));
 
-        await _tgsContext.PromotionBonuses.AddAsync(bonus,cancellationToken).ConfigureAwait(false);
+				await _promotionServiceClient.UpdatePromotionUsedAmountAsync(
+					promotion.Id,
+					totalAmount,
+					null, cancellationToken).ConfigureAwait(false);
 
-        if (promotion.AutoSentPlayerBonus)
-        {
-	        var playerBucket = new PlayerBucket
-	        {
-		        Id = Guid.NewGuid(),
-		        PlayerCode = command.PlayerCode,
-		        BucketAmount = depositBonusAmount * rule.TurnoverMultiple,
-		        BucketType = (short)BucketType.Promotion,
-		        IsFull = false,
-		        CreatedOn = DateTimeOffset.UtcNow.UtcDateTime
-	        };
-	        await _tgsContext.PlayerBuckets.AddAsync(playerBucket,cancellationToken).ConfigureAwait(false);
-        }
+				await _promotionBonusRepository.SendBonusAsync(
+					promotion, 
+					command.PlayerCode, 
+					bonusId,
+					command.DefaultWalletId, 
+					bonusAmount,
+					bucketAmount, 
+					command.UserId,
+					promotionBonusPlayerId.ToString(),
+					command.Remark,
+					cancellationToken);
+			}
 
-        await _tgsContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+			return new(promotionBonusPlayerId, bonusAmount);
+		}
 
-        var response = await _cashServiceClient.PromotionAsync(
-            command.DefaultWalletId,
-            bonusAmount,
-            null,
-            null,
-            null,
-            cancellationToken).ConfigureAwait(false);
-
-        var transactionPromotion = new TransactionPromotion
-        {
-            TransactionId = response.TransactionId,
-            PromotionId = promotion.Id,
-            PromotionBonusId = bonusId,
-            PromotionType = promotion.PromotionType
-        };
-
-        await _tgsContext.TransactionPromotions.AddAsync(transactionPromotion,cancellationToken).ConfigureAwait(false);
-        await _tgsContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-
-        return new SendDepositRewardPromotionResponse(bonus.PromotionPlayers.First().Id, bonusAmount);
-    }
+		return new(-1, bonusAmount);
+	}
 }

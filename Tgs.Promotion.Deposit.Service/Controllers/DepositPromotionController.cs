@@ -23,7 +23,7 @@ namespace Tgs.Promotion.Deposit.Service.Controllers
         public async Task<string> SendDepositPromotionAsync([FromQuery] DepositPromotion request)
         {
             var response = await _messageSender!
-                .RequestAsync("tgs.promotion.deposit.firstdeposit.distribute", Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request)))
+                .RequestAsync("tgs.promotion.dailyfirstdeposit.distribute", Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request)))
                 .ConfigureAwait(false);
 
             return Encoding.UTF8.GetString(response.Span);
@@ -34,7 +34,7 @@ namespace Tgs.Promotion.Deposit.Service.Controllers
         public async Task<string> SendDepositGiftPromotionAsync([FromQuery] DepositPromotion request)
         {
             var response = await _messageSender!
-                .RequestAsync("tgs.promotion.deposit.accountdeposit.distribute", Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request)))
+                .RequestAsync("tgs.promotion.depositreward.distribute", Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request)))
                 .ConfigureAwait(false);
 
             return Encoding.UTF8.GetString(response.Span);
