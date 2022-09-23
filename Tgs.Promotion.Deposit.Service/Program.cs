@@ -34,6 +34,12 @@ builder.Services.AddTgsRepository(builder.Configuration.GetConnectionString("Tgs
 	.AddRedis((redisOptions, _)
 		=> redisOptions.ConnectionString = builder.Configuration.GetConnectionString("Redis"))
     .AddPromotionDepositCore()
+	.AddPaymentServiceClient((options, sp) =>
+	{
+		var config = sp.GetRequiredService<IConfiguration>();
+
+		options.PaymentServiceBaseUrl = config.GetValue<Uri>("Promotion:PaymentServiceUrl");
+	})
     .AddCashServiceClient((options, sp) =>
     {
         var config = sp.GetRequiredService<IConfiguration>();
