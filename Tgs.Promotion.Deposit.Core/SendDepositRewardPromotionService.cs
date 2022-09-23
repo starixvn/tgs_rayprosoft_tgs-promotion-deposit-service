@@ -74,7 +74,7 @@ internal class
 
 		depositBonusAmount += bonusAmount;
 
-		var totalAmount = await _promotionRepository.IncreaseToTotalAmountAsync(promotion.Id, (long)bonusAmount);
+		var totalAmount = await _promotionRepository.IncreaseToTotalAmountAsync(promotion.Id, bonusAmount);
 
 		if (promotion.Unlimited == 1 ||
 		    totalAmount - bonusAmount <= promotion.TotalAmountLimit)
