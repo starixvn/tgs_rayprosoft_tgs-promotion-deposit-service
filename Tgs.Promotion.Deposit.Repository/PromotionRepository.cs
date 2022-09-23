@@ -10,8 +10,9 @@ internal class PromotionRepository : IPromotionRepository
     private readonly IMemoryCache _memoryCache;
     private readonly IRedisConnectionFactory _redisConnectionFactory;
     private const string TotalUsedAmountKey = "promotion:deposit:totalusedamount:{0}";
+    private const decimal ExchangeRate = 1000000;
 
-	public PromotionRepository(TgsContext tgsContext, IMemoryCache memoryCache, IRedisConnectionFactory redisConnectionFactory)
+    public PromotionRepository(TgsContext tgsContext, IMemoryCache memoryCache, IRedisConnectionFactory redisConnectionFactory)
     {
         _tgsContext = tgsContext;
         _memoryCache = memoryCache;
@@ -57,12 +58,12 @@ internal class PromotionRepository : IPromotionRepository
 	    });
     }
 
-    public async ValueTask<long> IncreaseToTotalAmountAsync(Guid promotionId,long amount)
+    public async ValueTask<decimal> IncreaseToTotalAmountAsync(Guid promotionId,decimal amount)
     {
         var key = string.Format(TotalUsedAmountKey, promotionId);
         var db = _redisConnectionFactory.GetDataBase();
-        var totalAmount =  await db.StringIncrementAsync(key, amount);
+        var totalAmount =  await db.StringIncrementAsync(key, (long)Math.Floor(amount * ExchangeRate));
 
-        return totalAmount;
+        return totalAmount / ExchangeRate;
     }
 }

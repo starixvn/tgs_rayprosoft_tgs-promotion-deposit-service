@@ -3,5 +3,5 @@
 public interface IPromotionRepository
 {
 	ValueTask<Promotion?> GetPromotionWithCacheAsync(Guid promotionId);
-	ValueTask<long> IncreaseToTotalAmountAsync(Guid promotionId, long amount);
+	ValueTask<decimal> IncreaseToTotalAmountAsync(Guid promotionId, decimal amount);
 }
