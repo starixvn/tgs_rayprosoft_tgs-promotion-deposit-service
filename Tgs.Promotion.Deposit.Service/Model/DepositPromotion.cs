@@ -6,7 +6,7 @@
         string PlayerCode,
         Guid DefaultWalletId,
         decimal DepositAmount,
-        string Remark,
+        string? Remark,
         Guid FormId,
         Guid? UserId);
 }

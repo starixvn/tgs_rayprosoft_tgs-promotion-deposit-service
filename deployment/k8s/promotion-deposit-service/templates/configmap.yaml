@@ -7,6 +7,8 @@ data:
   appsettings.json: |
     {
       "Promotion": {
+        "PaymentServiceUrl": "http://payment-api",
+        "Url": "http://promotion-api",
         "CashBaseUrl": "http://cashservice-api"
       }
     }

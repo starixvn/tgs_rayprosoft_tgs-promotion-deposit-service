@@ -2,7 +2,7 @@
 
 public record SendDepositRewardPromotion(
     Guid BrandId,
-    Guid? PromotionId,
+    Guid PromotionId,
     string PlayerCode,
     Guid DefaultWalletId,
     decimal DepositAmount,
