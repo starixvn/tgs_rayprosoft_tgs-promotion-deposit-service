@@ -24,6 +24,7 @@ namespace Tgs.Promotion.Register.Repository.Entities
         public virtual DbSet<PromotionBonus> PromotionBonuses { get; set; } = null!;
         public virtual DbSet<PromotionParticipant> PromotionParticipants { get; set; } = null!;
         public virtual DbSet<PromotionPlayer> PromotionPlayers { get; set; } = null!;
+        public virtual DbSet<PromotionVipLevel> PromotionVipLevels { get; set; } = null!;
         public virtual DbSet<TransactionPromotion> TransactionPromotions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -37,6 +38,7 @@ namespace Tgs.Promotion.Register.Repository.Entities
             modelBuilder.ApplyConfiguration(new Configurations.PromotionBonusConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PromotionParticipantConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PromotionPlayerConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PromotionVipLevelConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TransactionPromotionConfiguration());
             OnModelCreatingPartial(modelBuilder);
         }

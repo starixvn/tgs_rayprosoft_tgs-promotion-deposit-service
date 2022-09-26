@@ -11,6 +11,7 @@ namespace Tgs.Promotion.Register.Repository.Entities
         {
             PromotionBonus = new HashSet<PromotionBonus>();
             PromotionParticipants = new HashSet<PromotionParticipant>();
+            PromotionVipLevels = new HashSet<PromotionVipLevel>();
             TransactionPromotions = new HashSet<TransactionPromotion>();
         }
 
@@ -47,6 +48,7 @@ namespace Tgs.Promotion.Register.Repository.Entities
 
         public virtual ICollection<PromotionBonus> PromotionBonus { get; set; }
         public virtual ICollection<PromotionParticipant> PromotionParticipants { get; set; }
+        public virtual ICollection<PromotionVipLevel> PromotionVipLevels { get; set; }
         public virtual ICollection<TransactionPromotion> TransactionPromotions { get; set; }
     }
 }
