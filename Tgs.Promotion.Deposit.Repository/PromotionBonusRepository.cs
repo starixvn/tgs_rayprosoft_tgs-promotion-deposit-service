@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Data;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Tgs.CashService.Client;
 using Tgs.Promotion.Clients;
@@ -35,6 +37,29 @@ internal class PromotionBonusRepository : IPromotionBonusRepository
 
 		var bonusId = Guid.NewGuid();
 
+		var promotionData = new
+		{
+			promotion.Id,
+			promotion.BrandId,
+			promotion.From,
+			promotion.To,
+			Status = (PromotionStatus)promotion.Status,
+			promotion.Name,
+			promotion.AutoSentPlayerBonus,
+			promotion.PromotionType,
+			promotion.BonusAmountLimit,
+			promotion.AmountUsed,
+			Unlimited = promotion.Unlimited == 1,
+			GameType = (GameType?)promotion.GameType,
+			promotion.Percentage,
+			promotion.TotalAmountLimit,
+			promotion.TurnoverMultiple,
+			VipLevels =
+				_tgsContext.PromotionVipLevels.Where(x => x.PromotionId == promotion.Id).Select(v => v.Level)
+					.ToArray(),
+			promotion.CampaignDetail
+		};
+
 		var bonus = new PromotionBonus
 		{
 			Id = bonusId,
@@ -59,7 +84,14 @@ internal class PromotionBonusRepository : IPromotionBonusRepository
 					SentOn = promotion.AutoSentPlayerBonus ? DateTimeOffset.UtcNow.UtcDateTime : null,
 					BucketAmountByManual = bucketAmount
 				}
-			}.ToHashSet()
+			}.ToHashSet(),
+			Detail = JsonSerializer.Serialize(promotionData,
+				new JsonSerializerOptions
+				{
+					PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+					ReferenceHandler = ReferenceHandler.IgnoreCycles,
+					DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+				})
 		};
 
 		await _tgsContext.PromotionBonuses.AddAsync(bonus, cancellationToken).ConfigureAwait(false);
