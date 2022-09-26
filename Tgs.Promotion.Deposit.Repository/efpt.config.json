@@ -8,6 +8,7 @@
    "ModelNamespace": "Entities",
    "OutputContextPath": "Entities",
    "OutputPath": "Entities\\Models",
+   "PreserveCasingWithRegex": true,
    "ProjectRootNamespace": "Tgs.Promotion.Register.Repository",
    "Schemas": null,
    "SelectedHandlebarsLanguage": 0,
@@ -22,11 +23,7 @@
          "ObjectType": 0
       },
       {
-         "Name": "dbo.transaction_promotions",
-         "ObjectType": 0
-      },
-      {
-         "Name": "dbo.promotions",
+         "Name": "dbo.promotion_participants",
          "ObjectType": 0
       },
       {
@@ -34,7 +31,15 @@
          "ObjectType": 0
       },
       {
-         "Name": "dbo.promotion_participants",
+         "Name": "dbo.promotion_vip_levels",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.transaction_promotions",
          "ObjectType": 0
       }
    ],
@@ -55,5 +60,6 @@
    "UseNodaTime": false,
    "UseNullableReferences": true,
    "UseSchemaFolders": true,
-   "UseSpatial": true
+   "UseSpatial": true,
+   "UseT4": false
 }

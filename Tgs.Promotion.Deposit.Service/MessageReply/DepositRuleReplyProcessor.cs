@@ -36,7 +36,10 @@ public class DepositRuleReplyProcessor : IMessageProcessor
 				{
 					PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 					WriteIndented = true
-				})
+				}),
+			BonusAmountLimit = settings.BonusAmountLimit,
+			Percentage = settings.Percentage,
+			TurnoverMultiple = settings.TurnoverMultiple
 		};
 
 		return ValueTask.FromResult((ReadOnlyMemory<byte>)response.ToByteArray());
