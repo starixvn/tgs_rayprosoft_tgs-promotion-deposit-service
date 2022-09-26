@@ -90,11 +90,6 @@ internal class
 				_logger.LogInformation("total amount record: {JsonSerializer.Serialize(totalAmount)}",
 					JsonSerializer.Serialize(promotion.AmountUsed + bonusAmount));
 
-				await _promotionServiceClient.UpdatePromotionUsedAmountAsync(
-					promotion.Id,
-					totalAmount,
-					null, cancellationToken).ConfigureAwait(false);
-
 				await _promotionBonusRepository.SendBonusAsync(
 					promotion, 
 					command.PlayerCode, 
@@ -107,6 +102,11 @@ internal class
 					command.Remark,
 					cancellationToken);
 			}
+
+			await _promotionServiceClient.UpdatePromotionUsedAmountAsync(
+				promotion.Id,
+				totalAmount,
+				null, cancellationToken).ConfigureAwait(false);
 
 			return new(promotionBonusPlayerId, bonusAmount);
 		}
