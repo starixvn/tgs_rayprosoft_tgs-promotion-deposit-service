@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-{{ include "promotion-deposit-service.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  appsettings.json: |
+    {
+      "Promotion": {
+        "PaymentServiceUrl": "http://payment-api",
+        "Url": "http://promotion-api",
+        "CashBaseUrl": "http://cashservice-api"
+      }
+    }
+  monitor.settings.json: |
+    {
+      "Logging":{
+        "Console": {
+          "FormatterName": "json"
+        },
+        "LogLevel": {
+          "Default": "Warning",
+          "Microsoft": "Warning",
+          "Microsoft.Diagnostics": "Warning",
+          "Microsoft.Hosting.Lifetime": "Information"
+        }
+      }
+    }
+
