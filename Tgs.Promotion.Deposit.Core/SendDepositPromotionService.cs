@@ -43,7 +43,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 
 		depositBonusAmount += bonusAmount;
 
-		var bucketAmount = depositBonusAmount * promotion.TurnoverMultiple - command.DepositAmount;
+		var bucketAmount = depositBonusAmount * promotion.TurnoverMultiple;
 
 		var (bonusId, promotionBonusPlayerId) = await _promotionBonusRepository.CreatePromotionBonusAsync(promotion,
 			command.PlayerCode, bonusAmount,
