@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
 using Tgs.CashService.Client;
 using Tgs.Promotion.Clients;
 using Tgs.Promotion.Deposit.Core;
@@ -14,11 +13,12 @@ internal class PromotionBonusRepository : IPromotionBonusRepository
 	private readonly ICashServiceClient _cashServiceClient;
 	private readonly TgsContext _tgsContext;
 
-	public PromotionBonusRepository(TgsContext tgsContext,
+	public PromotionBonusRepository(
+		TgsContext tgsContext,
 		ICashServiceClient cashServiceClient)
 	{
-		_tgsContext = tgsContext;
-		_cashServiceClient = cashServiceClient;
+		_tgsContext = tgsContext ?? throw new ArgumentNullException(nameof(tgsContext));
+		_cashServiceClient = cashServiceClient ?? throw new ArgumentNullException(nameof(cashServiceClient));
 	}
 
 	public async ValueTask<(Guid, int)> CreatePromotionBonusAsync(Core.Promotion promotion, string playerCode,
@@ -94,20 +94,20 @@ internal class PromotionBonusRepository : IPromotionBonusRepository
 				})
 		};
 
-		await _tgsContext.PromotionBonuses.AddAsync(bonus, cancellationToken).ConfigureAwait(false);
+		_ = await _tgsContext.PromotionBonuses.AddAsync(
+			bonus,
+			cancellationToken).ConfigureAwait(false);
 
-		await _tgsContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		_ = await _tgsContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-		return (bonusId,bonus.PromotionPlayers.First().Id);
+		return (bonusId, bonus.PromotionPlayers.First().Id);
 	}
 
 	public async ValueTask SendBonusAsync(
-		Core.Promotion promotion, 
-		string playerCode, 
+		Core.Promotion promotion,
 		Guid bonusId,
-		Guid defaultWalletId, 
+		Guid defaultWalletId,
 		decimal bonusAmount,
-		decimal bucketAmount,
 		Guid? userId,
 		string? externalId,
 		string? description,
@@ -129,17 +129,7 @@ internal class PromotionBonusRepository : IPromotionBonusRepository
 			PromotionType = promotion.PromotionType
 		};
 
-		var playerBucket = new PlayerBucket
-		{
-			Id = Guid.NewGuid(),
-			PlayerCode = playerCode,
-			BucketAmount = bucketAmount,
-			BucketType = (short)BucketType.Promotion,
-			IsFull = false,
-			CreatedOn = DateTimeOffset.UtcNow.UtcDateTime
-		};
-		await _tgsContext.PlayerBuckets.AddAsync(playerBucket, cancellationToken).ConfigureAwait(false);
-		await _tgsContext.TransactionPromotions.AddAsync(transactionPromotion, cancellationToken).ConfigureAwait(false);
-		await _tgsContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		_ = await _tgsContext.TransactionPromotions.AddAsync(transactionPromotion, cancellationToken).ConfigureAwait(false);
+		_ = await _tgsContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 	}
 }
