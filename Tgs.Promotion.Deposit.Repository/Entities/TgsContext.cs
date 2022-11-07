@@ -19,7 +19,6 @@ namespace Tgs.Promotion.Register.Repository.Entities
         {
         }
 
-        public virtual DbSet<PlayerBucket> PlayerBuckets { get; set; } = null!;
         public virtual DbSet<Promotion> Promotions { get; set; } = null!;
         public virtual DbSet<PromotionBonus> PromotionBonuses { get; set; } = null!;
         public virtual DbSet<PromotionParticipant> PromotionParticipants { get; set; } = null!;
@@ -30,10 +29,8 @@ namespace Tgs.Promotion.Register.Repository.Entities
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasPostgresExtension("ltree")
-                .HasPostgresExtension("pg_trgm")
-                .HasPostgresExtension("uuid-ossp");
+                .HasPostgresExtension("pg_trgm");
 
-            modelBuilder.ApplyConfiguration(new Configurations.PlayerBucketConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PromotionConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PromotionBonusConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PromotionParticipantConfiguration());

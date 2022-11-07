@@ -12,33 +12,30 @@ public class DepositMessageProcessor : IMessageProcessor
 	private readonly ILogger<DepositMessageProcessor> _logger;
 
 	public DepositMessageProcessor(ILogger<DepositMessageProcessor> logger,
-        IGetService<SendDepositPromotion, SendDepositPromotionResponse> getService)
+		IGetService<SendDepositPromotion, SendDepositPromotionResponse> getService)
 	{
-        _getService = getService ?? throw new ArgumentNullException(nameof(getService));
+		_getService = getService ?? throw new ArgumentNullException(nameof(getService));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public async ValueTask<ReadOnlyMemory<byte>> HandleAsync(ReadOnlyMemory<byte> data,
+	public async ValueTask<ReadOnlyMemory<byte>> HandleAsync(
+		ReadOnlyMemory<byte> data,
 		CancellationToken cancellationToken)
 	{
 		var json = Encoding.UTF8.GetString(data.Span);
-		var request = JsonSerializer.Deserialize<DepositMessageData>(json)!;
+		var request = JsonSerializer.Deserialize<DepositMessageData>(json)
+			?? throw new ArgumentNullException(nameof(data));
 
-		_logger.LogInformation($"deposit distribution request: {request}");
-
-		if (request is null)
-		{
-			throw new ArgumentNullException(nameof(request));
-		}
+		_logger.LogInformation("deposit distribution request: {request}", request);
 
 		var command =
-			new SendDepositPromotion(request.BrandId, request.PromotionId,request.PlayerCode,request.DefaultWalletId,request.DepositAmount,request.Remark,request.FormId,request.UserId);
+			new SendDepositPromotion(request.BrandId, request.PromotionId, request.PlayerCode, request.DefaultWalletId, request.DepositAmount, request.Remark, request.FormId, request.UserId);
 
 		var response = await _getService.GetAsync(command, cancellationToken);
 
-		var responseData = new DepositMessageDataResponse(response.PromotionBonusPlayerId,response.DepositBonusAmount);
+		var responseData = new DepositMessageDataResponse(response.PromotionBonusPlayerId, response.DepositBonusAmount);
 
-		_logger.LogInformation($"deposit distribution response: {responseData}");
+		_logger.LogInformation("deposit distribution response: {responseData}", responseData);
 
 		return (ReadOnlyMemory<byte>)Encoding.UTF8.GetBytes(JsonSerializer.Serialize(responseData));
 	}

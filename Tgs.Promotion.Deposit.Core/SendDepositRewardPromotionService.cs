@@ -2,30 +2,34 @@
 using Microsoft.Extensions.Logging;
 using Tgs.Payment.Clients;
 using Tgs.Promotion.Clients;
+using Tgs.Service.PlayerBuckets;
 using Tgs.ServiceUtility;
 
 namespace Tgs.Promotion.Deposit.Core;
 
-internal class
-	SendDepositRewardPromotionService : IGetService<SendDepositRewardPromotion, SendDepositRewardPromotionResponse>
+internal class SendDepositRewardPromotionService : IGetService<SendDepositRewardPromotion, SendDepositRewardPromotionResponse>
 {
 	private readonly ILogger<SendDepositRewardPromotionService> _logger;
+	private readonly IPaymentServiceClient _paymentServiceClient;
+	private readonly IPlayerBucketClient _playerBucketClient;
 	private readonly IPromotionBonusRepository _promotionBonusRepository;
 	private readonly IPromotionRepository _promotionRepository;
 	private readonly IPromotionServiceClient _promotionServiceClient;
-	private readonly IPaymentServiceClient _paymentServiceClient;
+
 	public SendDepositRewardPromotionService(
 		IPromotionRepository promotionRepository,
 		IPromotionBonusRepository promotionBonusRepository,
 		IPromotionServiceClient promotionServiceClient,
 		IPaymentServiceClient paymentServiceClient,
+		IPlayerBucketClient playerBucketClient,
 		ILogger<SendDepositRewardPromotionService> logger)
 	{
-		_logger = logger;
-		_promotionRepository = promotionRepository;
-		_promotionBonusRepository = promotionBonusRepository;
-		_promotionServiceClient = promotionServiceClient;
-		_paymentServiceClient = paymentServiceClient;
+		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+		_promotionRepository = promotionRepository ?? throw new ArgumentNullException(nameof(promotionRepository));
+		_promotionBonusRepository = promotionBonusRepository ?? throw new ArgumentNullException(nameof(promotionBonusRepository));
+		_promotionServiceClient = promotionServiceClient ?? throw new ArgumentNullException(nameof(promotionServiceClient));
+		_paymentServiceClient = paymentServiceClient ?? throw new ArgumentNullException(nameof(paymentServiceClient));
+		_playerBucketClient = playerBucketClient ?? throw new ArgumentNullException(nameof(playerBucketClient));
 	}
 
 	public async ValueTask<SendDepositRewardPromotionResponse> GetAsync(
@@ -39,7 +43,7 @@ internal class
 
 		if (promotion == null)
 		{
-			_logger.LogError($"promotion is not found. ({command.PromotionId})");
+			_logger.LogError("promotion is not found. ({command.PromotionId})", command.PromotionId);
 
 			return new(null, 0);
 		}
@@ -48,7 +52,7 @@ internal class
 
 		if (depositForm == null)
 		{
-			_logger.LogError($"depositForm is not found. ({command.FormId})");
+			_logger.LogError("depositForm is not found. ({command.FormId})", command.FormId);
 
 			return new(null, 0);
 		}
@@ -61,7 +65,10 @@ internal class
 		if (rule.DepositMinimumLimit > depositAmount)
 		{
 			_logger.LogError(
-				$"DepositAmount {depositAmount} less then DepositMinimumLimit {rule.DepositMinimumLimit}. ({command.PromotionId})");
+				"DepositAmount {depositAmount} less then DepositMinimumLimit {rule.DepositMinimumLimit}. ({command.PromotionId})",
+				depositAmount,
+				rule.DepositMinimumLimit,
+				command.PromotionId);
 
 			return new(null, 0);
 		}
@@ -77,7 +84,7 @@ internal class
 		var totalAmount = await _promotionRepository.IncreaseToTotalAmountAsync(promotion.Id, bonusAmount);
 
 		if (promotion.Unlimited == 1 ||
-		    totalAmount - bonusAmount <= promotion.TotalAmountLimit)
+			totalAmount - bonusAmount <= promotion.TotalAmountLimit)
 		{
 			var bucketAmount = depositBonusAmount * rule.TurnoverMultiple;
 
@@ -87,16 +94,22 @@ internal class
 
 			if (promotion.AutoSentPlayerBonus)
 			{
-				_logger.LogInformation("total amount record: {JsonSerializer.Serialize(totalAmount)}",
-					JsonSerializer.Serialize(promotion.AmountUsed + bonusAmount));
+				_logger.LogInformation(
+					"total amount record: {JsonSerializer.Serialize(totalAmount)}",
+					promotion.AmountUsed + bonusAmount);
+
+				_ = await _playerBucketClient.CreateBucketAsync(
+					command.PlayerCode,
+					bucketAmount,
+					Service.PlayerBuckets.BucketType.Promotion,
+					promotionBonusPlayerId.ToString(),
+					cancellationToken).ConfigureAwait(false);
 
 				await _promotionBonusRepository.SendBonusAsync(
-					promotion, 
-					command.PlayerCode, 
+					promotion,
 					bonusId,
-					command.DefaultWalletId, 
+					command.DefaultWalletId,
 					bonusAmount,
-					bucketAmount, 
 					command.UserId,
 					promotionBonusPlayerId.ToString(),
 					command.Remark,
