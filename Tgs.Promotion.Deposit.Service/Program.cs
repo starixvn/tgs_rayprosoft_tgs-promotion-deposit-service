@@ -2,6 +2,7 @@
 using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Tgs.PlayerBucket.Clients.DependencyInjection;
 using Tgs.Promotion.Deposit.Service.MessageReply;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,7 +50,8 @@ builder.Services.AddTgsRepository(builder.Configuration.GetConnectionString("Tgs
 
 		options.Url = config.GetValue<Uri>("Promotion:Url");
 	})
-	.AddMemoryCache();
+	.AddMemoryCache()
+	.AddPlayerBucketClient();
 
 builder.Logging
 	.AddOpenTelemetry(options =>
