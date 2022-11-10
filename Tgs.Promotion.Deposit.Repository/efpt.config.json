@@ -15,10 +15,6 @@
    "SelectedToBeGenerated": 0,
    "Tables": [
       {
-         "Name": "dbo.player_buckets",
-         "ObjectType": 0
-      },
-      {
          "Name": "dbo.promotion_bonuses",
          "ObjectType": 0
       },
@@ -43,7 +39,7 @@
          "ObjectType": 0
       }
    ],
-   "UiHint": "tgs",
+   "UiHint": "tgs-local",
    "UseBoolPropertiesWithoutDefaultSql": false,
    "UseDatabaseNames": false,
    "UseDbContextSplitting": true,
