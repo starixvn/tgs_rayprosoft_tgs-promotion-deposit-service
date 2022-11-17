@@ -3,21 +3,19 @@
 public interface IPromotionBonusRepository
 {
 	ValueTask<(Guid bonusId, int promotionBonusPlayerId)> CreatePromotionBonusAsync(
-		Promotion promotion, 
-		string playerCode, 
+		Promotion promotion,
+		string playerCode,
 		decimal bonusAmount,
-		decimal bucketAmount, 
+		decimal bucketAmount,
 		CancellationToken cancellationToken);
 
 	ValueTask SendBonusAsync(
-		Promotion promotion, 
-		string playerCode,
-		Guid bonusId, 
-		Guid defaultWalletId, 
+		Promotion promotion,
+		Guid bonusId,
+		Guid defaultWalletId,
 		decimal bonusAmount,
-		decimal bucketAmount,
 		Guid? userId,
 		string? externalId,
-		string? description, 
+		string? description,
 		CancellationToken cancellationToken);
 }

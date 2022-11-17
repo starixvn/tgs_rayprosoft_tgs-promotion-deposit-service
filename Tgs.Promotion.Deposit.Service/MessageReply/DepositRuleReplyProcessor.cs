@@ -14,24 +14,23 @@ public class DepositRuleReplyProcessor : IMessageProcessor
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	public ValueTask<ReadOnlyMemory<byte>> HandleAsync(ReadOnlyMemory<byte> data,
+	public ValueTask<ReadOnlyMemory<byte>> HandleAsync(
+		ReadOnlyMemory<byte> data,
 		CancellationToken cancellationToken)
 	{
 		var request = CampaignDetailRequest.Parser.ParseFrom(data.Span);
 
-		var settings = JsonSerializer.Deserialize<DepositRewardSetting>(request.Settings,
-			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+		var settings = JsonSerializer.Deserialize<DepositRewardSetting>(
+			request.Settings,
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+			?? throw new NullReferenceException("Deserialize DepositRewardSetting is null");
 
-		_logger.LogInformation($"Account deposit setting : {settings}");
-
-		if (settings is null)
-		{
-			throw new ArgumentNullException(nameof(settings));
-		}
+		_logger.LogInformation("Account deposit setting : {settings}", settings);
 
 		var response = new CampaignDetailResponse
 		{
-			CampaignDetail = JsonSerializer.Serialize(settings,
+			CampaignDetail = JsonSerializer.Serialize(
+				settings,
 				new JsonSerializerOptions
 				{
 					PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
