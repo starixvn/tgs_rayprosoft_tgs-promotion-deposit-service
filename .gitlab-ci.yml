@@ -36,7 +36,7 @@ deploy-dev:
   variables:
     namespace: dev
     kube_config: KubeConfig_Raypro_dev
-    replica: 2
+    replica: 1
   environment:
     name: dev
   stage: deploy-dev
@@ -53,7 +53,7 @@ deploy-staging:
   variables:
     namespace: staging
     kube_config: KubeConfig_Raypro_staging
-    replica: 2
+    replica: 1
   environment:
     name: staging
   stage: deploy-staging
