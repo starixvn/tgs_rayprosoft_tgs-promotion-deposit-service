@@ -36,8 +36,6 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
 		SendDepositRewardPromotion command,
 		CancellationToken cancellationToken = default)
 	{
-		var depositBonusAmount = command.DepositAmount;
-
 		var promotion = await _promotionRepository.GetPromotionWithCacheAsync(command.PromotionId)
 			.ConfigureAwait(false);
 
@@ -73,20 +71,13 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
 			return new(null, 0);
 		}
 
-		var bonusAmount = rule.Percentage * command.DepositAmount / 100M;
-
-		bonusAmount = bonusAmount > rule.BonusAmountLimit
-			? rule.BonusAmountLimit
-			: bonusAmount;
-
-		depositBonusAmount += bonusAmount;
+		var (bonusAmount, bucketAmount) = CalculateAmount(rule, command.DepositAmount);
 
 		var totalAmount = await _promotionRepository.IncreaseToTotalAmountAsync(promotion.Id, bonusAmount);
 
 		if (promotion.Unlimited == 1 ||
 			totalAmount - bonusAmount <= promotion.TotalAmountLimit)
 		{
-			var bucketAmount = depositBonusAmount * rule.TurnoverMultiple;
 
 			var (bonusId, promotionBonusPlayerId) = await _promotionBonusRepository.CreatePromotionBonusAsync(promotion,
 				command.PlayerCode, bonusAmount,
@@ -125,5 +116,22 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
 		}
 
 		return new(null, bonusAmount);
+	}
+
+	private static (decimal bonusAmount, decimal bucketAmount) CalculateAmount(DepositRewardRule rule, decimal depositAmount)
+	{
+		var depositBonusAmount = depositAmount;
+
+		var bonusAmount = rule.Percentage * depositAmount / 100M;
+
+		bonusAmount = bonusAmount > rule.BonusAmountLimit
+			? rule.BonusAmountLimit
+			: bonusAmount;
+
+		depositBonusAmount += bonusAmount;
+
+		var bucketAmount = depositBonusAmount * rule.TurnoverMultiple - depositAmount;
+
+		return (bonusAmount, bucketAmount);
 	}
 }
