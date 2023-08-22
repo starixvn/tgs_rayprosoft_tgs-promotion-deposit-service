@@ -27,8 +27,6 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 		SendDepositPromotion command,
 		CancellationToken cancellationToken = default)
 	{
-		var depositBonusAmount = command.DepositAmount;
-
 		var promotion = await _promotionRepository
 			.GetPromotionWithCacheAsync(command.PromotionId)
 			.ConfigureAwait(false);
@@ -40,15 +38,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			return new(null, 0);
 		}
 
-		var bonusAmount = promotion.Percentage * command.DepositAmount / 100M;
-
-		bonusAmount = bonusAmount > promotion.BonusAmountLimit
-			? promotion.BonusAmountLimit
-			: bonusAmount;
-
-		depositBonusAmount += bonusAmount;
-
-		var bucketAmount = depositBonusAmount * promotion.TurnoverMultiple;
+		var (bonusAmount, bucketAmount) = CalculateAmount(promotion, command.DepositAmount);
 
 		var (bonusId, promotionBonusPlayerId) = await _promotionBonusRepository.CreatePromotionBonusAsync(
 			promotion,
@@ -75,5 +65,22 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			cancellationToken);
 
 		return new(promotionBonusPlayerId, bonusAmount);
+	}
+
+	private static (decimal bonusAmount, decimal bucketAmount) CalculateAmount(Promotion promotion, decimal depositAmount)
+	{
+		var depositBonusAmount = depositAmount;
+
+		var bonusAmount = promotion.Percentage * depositAmount / 100M;
+
+		bonusAmount = bonusAmount > promotion.BonusAmountLimit
+			? promotion.BonusAmountLimit
+			: bonusAmount;
+
+		depositBonusAmount += bonusAmount;
+
+		var bucketAmount = depositBonusAmount * promotion.TurnoverMultiple - depositAmount;
+
+		return (bonusAmount, bucketAmount);
 	}
 }
