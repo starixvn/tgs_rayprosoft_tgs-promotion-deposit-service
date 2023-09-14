@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Tgs.Payment.Clients;
+using Tgs.PlayerBucket.Client;
 using Tgs.Promotion.Clients;
-using Tgs.Service.PlayerBuckets;
 using Tgs.ServiceUtility;
 
 namespace Tgs.Promotion.Deposit.Core;
@@ -11,25 +11,25 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
 {
 	private readonly ILogger<SendDepositRewardPromotionService> _logger;
 	private readonly IPaymentServiceClient _paymentServiceClient;
-	private readonly IPlayerBucketClient _playerBucketClient;
 	private readonly IPromotionBonusRepository _promotionBonusRepository;
 	private readonly IPromotionRepository _promotionRepository;
 	private readonly IPromotionServiceClient _promotionServiceClient;
+	private readonly IPlayerBucketForTypesClient _playerBucketForTypesClient;
 
 	public SendDepositRewardPromotionService(
 		IPromotionRepository promotionRepository,
 		IPromotionBonusRepository promotionBonusRepository,
 		IPromotionServiceClient promotionServiceClient,
 		IPaymentServiceClient paymentServiceClient,
-		IPlayerBucketClient playerBucketClient,
+		IPlayerBucketForTypesClient playerBucketForTypesClient,
 		ILogger<SendDepositRewardPromotionService> logger)
 	{
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+		_playerBucketForTypesClient = playerBucketForTypesClient;
 		_promotionRepository = promotionRepository ?? throw new ArgumentNullException(nameof(promotionRepository));
 		_promotionBonusRepository = promotionBonusRepository ?? throw new ArgumentNullException(nameof(promotionBonusRepository));
 		_promotionServiceClient = promotionServiceClient ?? throw new ArgumentNullException(nameof(promotionServiceClient));
 		_paymentServiceClient = paymentServiceClient ?? throw new ArgumentNullException(nameof(paymentServiceClient));
-		_playerBucketClient = playerBucketClient ?? throw new ArgumentNullException(nameof(playerBucketClient));
 	}
 
 	public async ValueTask<SendDepositRewardPromotionResponse> GetAsync(
@@ -89,11 +89,13 @@ internal class SendDepositRewardPromotionService : IGetService<SendDepositReward
 					"total amount record: {JsonSerializer.Serialize(totalAmount)}",
 					promotion.AmountUsed + bonusAmount);
 
-				_ = await _playerBucketClient.CreateBucketAsync(
+				await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
 					command.PlayerCode,
 					bucketAmount,
 					Service.PlayerBuckets.BucketType.Promotion,
 					promotionBonusPlayerId.ToString(),
+					"",
+					rule.BucketType == null ? Enumerable.Empty<string>() : new[] { rule.BucketType },
 					cancellationToken).ConfigureAwait(false);
 
 				await _promotionBonusRepository.SendBonusAsync(

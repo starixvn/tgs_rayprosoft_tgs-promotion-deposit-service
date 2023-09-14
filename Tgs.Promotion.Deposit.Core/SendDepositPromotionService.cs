@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using Tgs.Service.PlayerBuckets;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Tgs.PlayerBucket.Client;
 using Tgs.ServiceUtility;
 
 namespace Tgs.Promotion.Deposit.Core;
@@ -7,20 +8,21 @@ namespace Tgs.Promotion.Deposit.Core;
 internal class SendDepositPromotionService : IGetService<SendDepositPromotion, SendDepositPromotionResponse>
 {
 	private readonly ILogger<SendDepositPromotionService> _logger;
-	private readonly IPlayerBucketClient _playerBucketClient;
+	private readonly IPlayerBucketForTypesClient _playerBucketForTypesClient;
 	private readonly IPromotionBonusRepository _promotionBonusRepository;
 	private readonly IPromotionRepository _promotionRepository;
 
 	public SendDepositPromotionService(
 		IPromotionRepository promotionRepository,
 		IPromotionBonusRepository promotionBonusRepository,
-		IPlayerBucketClient playerBucketClient,
+		IPlayerBucketForTypesClient playerBucketForTypesClient,
 		ILogger<SendDepositPromotionService> logger)
 	{
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+		_playerBucketForTypesClient = playerBucketForTypesClient;
 		_promotionRepository = promotionRepository ?? throw new ArgumentNullException(nameof(promotionRepository));
-		_promotionBonusRepository = promotionBonusRepository ?? throw new ArgumentNullException(nameof(promotionBonusRepository));
-		_playerBucketClient = playerBucketClient ?? throw new ArgumentNullException(nameof(playerBucketClient));
+		_promotionBonusRepository = promotionBonusRepository ??
+			throw new ArgumentNullException(nameof(promotionBonusRepository));
 	}
 
 	public async ValueTask<SendDepositPromotionResponse> GetAsync(
@@ -47,12 +49,17 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			bucketAmount,
 			cancellationToken);
 
-		_ = await _playerBucketClient.CreateBucketAsync(
-			command.PlayerCode,
-			bucketAmount,
-			Service.PlayerBuckets.BucketType.Promotion,
-			promotionBonusPlayerId.ToString(),
-			cancellationToken).ConfigureAwait(false);
+		var rule = JsonSerializer.Deserialize<DepositRule>(promotion.CampaignDetail,
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
+            command.PlayerCode,
+            bucketAmount,
+            Service.PlayerBuckets.BucketType.Promotion,
+            promotionBonusPlayerId.ToString(),
+            "",
+            rule?.BucketType == null ? Enumerable.Empty<string>() : new[] { rule.BucketType },
+            cancellationToken).ConfigureAwait(false);
 
 		await _promotionBonusRepository.SendBonusAsync(
 			promotion,
@@ -67,7 +74,8 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 		return new(promotionBonusPlayerId, bonusAmount);
 	}
 
-	private static (decimal bonusAmount, decimal bucketAmount) CalculateAmount(Promotion promotion, decimal depositAmount)
+	private static (decimal bonusAmount, decimal bucketAmount) CalculateAmount(Promotion promotion,
+		decimal depositAmount)
 	{
 		var depositBonusAmount = depositAmount;
 
@@ -81,6 +89,6 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 
 		var bucketAmount = depositBonusAmount * promotion.TurnoverMultiple - depositAmount;
 
-		return (bonusAmount, bucketAmount);
-	}
+        return (bonusAmount, bucketAmount);
+    }
 }

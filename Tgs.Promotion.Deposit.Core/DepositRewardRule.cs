@@ -4,4 +4,5 @@ public record DepositRewardRule(
     decimal BonusAmountLimit,
     decimal Percentage,
     decimal TurnoverMultiple,
-    decimal DepositMinimumLimit);
+    decimal DepositMinimumLimit,
+	string? BucketType);

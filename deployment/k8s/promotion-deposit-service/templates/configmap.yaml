@@ -9,7 +9,8 @@ data:
       "Promotion": {
         "PaymentServiceUrl": "http://payment-api",
         "Url": "http://promotion-api",
-        "CashBaseUrl": "http://cashservice-api"
+        "CashBaseUrl": "http://cashservice-api",
+        "PlayerBucketBaseUrl": "http://tgs-playerbucket-service"
       }
     }
   monitor.settings.json: |

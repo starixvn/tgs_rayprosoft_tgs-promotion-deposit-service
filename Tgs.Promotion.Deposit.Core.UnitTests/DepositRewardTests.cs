@@ -2,8 +2,8 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Tgs.Payment.Clients;
+using Tgs.PlayerBucket.Client;
 using Tgs.Promotion.Clients;
-using Tgs.Service.PlayerBuckets;
 
 namespace Tgs.Promotion.Deposit.Core.UnitTests;
 
@@ -13,7 +13,7 @@ public class DepositRewardTests
 	public async Task Deposit()
 	{
 		// Arrange
-		var fakePlayerBucketClient = Substitute.For<IPlayerBucketClient>();
+		var fakePlayerBucketClient = Substitute.For<IPlayerBucketForTypesClient>();
 		var fakePaymentServiceClient = Substitute.For<IPaymentServiceClient>();
 		var fakePromotionServiceClient = Substitute.For<IPromotionServiceClient>();
 		var fakePromotionRepository = Substitute.For<IPromotionRepository>();
@@ -27,7 +27,7 @@ public class DepositRewardTests
 			fakePlayerBucketClient,
 			NullLogger<SendDepositRewardPromotionService>.Instance);
 
-		var rule = new DepositRewardRule(100,10,5,100);
+		var rule = new DepositRewardRule(100, 10, 5, 100, null);
 
 		var promotion = new Promotion
 		{
@@ -39,7 +39,7 @@ public class DepositRewardTests
 		var depositForm = new DepositFormInfo
 		{
 			ActualAmount = 100,
-			Amount = 100,
+			Amount = 100
 		};
 
 		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
@@ -59,14 +59,15 @@ public class DepositRewardTests
 		_ = await sut.GetAsync(command);
 		// Assert
 		_ = fakePromotionBonusRepository.Received(1)
-			.CreatePromotionBonusAsync(Arg.Is(promotion),Arg.Is(command.PlayerCode),Arg.Is((decimal)33.3),Arg.Is((decimal)1498.5), default);
+			.CreatePromotionBonusAsync(Arg.Is(promotion), Arg.Is(command.PlayerCode), Arg.Is((decimal)33.3),
+				Arg.Is((decimal)1498.5), default);
 	}
 
 	[Test]
-	public async Task Deposit_Auto_Send_Bonus()
+	public async Task Add_Player_Bucket()
 	{
 		// Arrange
-		var fakePlayerBucketClient = Substitute.For<IPlayerBucketClient>();
+		var fakePlayerBucketForTypesClient = Substitute.For<IPlayerBucketForTypesClient>();
 		var fakePaymentServiceClient = Substitute.For<IPaymentServiceClient>();
 		var fakePromotionServiceClient = Substitute.For<IPromotionServiceClient>();
 		var fakePromotionRepository = Substitute.For<IPromotionRepository>();
@@ -77,10 +78,10 @@ public class DepositRewardTests
 			fakePromotionBonusRepository,
 			fakePromotionServiceClient,
 			fakePaymentServiceClient,
-			fakePlayerBucketClient,
+			fakePlayerBucketForTypesClient,
 			NullLogger<SendDepositRewardPromotionService>.Instance);
 
-		var rule = new DepositRewardRule(100, 10, 5, 100);
+		var rule = new DepositRewardRule(100, 10, 5, 100, "Sportsbook");
 
 		var promotion = new Promotion
 		{
@@ -93,7 +94,7 @@ public class DepositRewardTests
 		var depositForm = new DepositFormInfo
 		{
 			ActualAmount = 100,
-			Amount = 100,
+			Amount = 100
 		};
 
 		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
@@ -112,8 +113,7 @@ public class DepositRewardTests
 		// Act
 		_ = await sut.GetAsync(command);
 		// Assert
-		_ = fakePromotionBonusRepository.Received(1)
-			.SendBonusAsync(Arg.Any<Promotion>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<decimal>(), Arg.Any<Guid?>(), Arg.Any<string>(), Arg.Any<string>(), default);
+		await fakePlayerBucketForTypesClient.ReceivedWithAnyArgs(1)
+			.CreateBucketForBucketTypesAsync(null, 0, Service.PlayerBuckets.BucketType.None, null, null);
 	}
-
 }
