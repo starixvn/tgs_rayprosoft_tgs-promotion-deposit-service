@@ -2,7 +2,6 @@
 using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Tgs.PlayerBucket.Clients.DependencyInjection;
 using Tgs.Promotion.Deposit.Service.MessageReply;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +17,7 @@ builder.Services
 		{
 			var config = sp.GetRequiredService<IConfiguration>();
 
-			options.Url = config.GetConnectionString("Nats");
+			options.Url = config.GetConnectionString("Nats")!;
 		})
 		.AddProcessor<DepositRuleReplyProcessor>("tgs.promotion.depositreward.setting", "tgs.promotion.depositreward.setting")
 		.AddProcessor<DepositRewardMessageProcessor>("tgs.promotion.depositreward.distribute", "tgs.promotion.depositreward.distribute")
@@ -28,16 +27,13 @@ builder.Services
 	.AddNatsGlobPatternExchange("*");
 
 // Add services to the container.
-builder.Services.AddTgsRepository(builder.Configuration.GetConnectionString("Tgs"))
+builder.Services.AddTgsRepository(builder.Configuration.GetConnectionString("Tgs")!)
 	.AddRedis((redisOptions, _)
-		=> redisOptions.ConnectionString = builder.Configuration.GetConnectionString("Redis"))
+		=> redisOptions.ConnectionString = builder.Configuration.GetConnectionString("Redis")!)
 	.AddPromotionDepositCore()
-	.AddPaymentServiceClient((options, sp) =>
-	{
-		var config = sp.GetRequiredService<IConfiguration>();
-
-		options.PaymentServiceBaseUrl = config.GetValue<Uri>("Promotion:PaymentServiceUrl");
-	})
+	.AddPaymentServiceClient(httpClientBuilder => httpClientBuilder
+		.ConfigureHttpClient(httpClient => httpClient.BaseAddress =
+			builder.Configuration.GetValue<Uri>("Promotion:PaymentServiceUrl")))
 	.AddCashServiceClient((options, sp) =>
 	{
 		var config = sp.GetRequiredService<IConfiguration>();
@@ -51,7 +47,10 @@ builder.Services.AddTgsRepository(builder.Configuration.GetConnectionString("Tgs
 		options.Url = config.GetValue<Uri>("Promotion:Url");
 	})
 	.AddMemoryCache()
-	.AddPlayerBucketClient();
+	.AddPlayerBucketTypeClient()
+	.AddPlayerBucketClient(httpClientBuilder => httpClientBuilder
+		.ConfigureHttpClient(httpClient => httpClient.BaseAddress =
+			builder.Configuration.GetValue<Uri>("Promotion:PlayerBucketBaseUrl")));
 
 builder.Logging
 	.AddOpenTelemetry(options =>
@@ -69,18 +68,19 @@ builder.Logging
 
 builder.Services
 	.AddOptions<OtlpExporterOptions>()
-	.Configure<IConfiguration>((options, conifg) =>
+	.Configure<IConfiguration>((options, config) =>
 	{
-		var nodeIp = conifg.GetValue<string>("NODE_IP");
+		var nodeIp = config.GetValue<string>("NODE_IP");
 
 		if (!string.IsNullOrWhiteSpace(nodeIp))
 			options.Endpoint = new Uri($"http://{nodeIp}:4317");
 
-		conifg.GetSection("Opentelemetry:Tracing").Bind(options);
+		config.GetSection("Opentelemetry:Tracing").Bind(options);
 	});
 
 builder.Services
-	.AddOpenTelemetryTracing(builder => builder
+	.AddOpenTelemetry()
+	.WithTracing(builder => builder
 		.SetResourceBuilder(ResourceBuilder.CreateDefault()
 			.AddEnvironmentVariableDetector())
 		.AddSource("Tgs.*")
@@ -90,6 +90,7 @@ builder.Services
 		.AddEntityFrameworkCoreInstrumentation(options => options.SetDbStatementForText = true)
 		.AddProfileViewExporter()
 		.AddOtlpExporter())
+	.Services
 	.Configure<AspNetCoreInstrumentationOptions>(options => options.Filter =
 		httpContext => !httpContext.Request.Path.HasValue
 			|| !httpContext.Request.Path.StartsWithSegments("/swagger")
