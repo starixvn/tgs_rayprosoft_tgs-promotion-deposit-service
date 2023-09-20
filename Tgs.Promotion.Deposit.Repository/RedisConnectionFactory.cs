@@ -11,10 +11,7 @@ internal class RedisConnectionFactory : IRedisConnectionFactory, IDisposable
     public RedisConnectionFactory(
         IOptions<RedisOptions> optionsAccessor)
     {
-        if (optionsAccessor is null)
-        {
-            throw new ArgumentNullException(nameof(optionsAccessor));
-        }
+        if (optionsAccessor is null) throw new ArgumentNullException(nameof(optionsAccessor));
 
         var options = optionsAccessor.Value;
 
@@ -31,16 +28,15 @@ internal class RedisConnectionFactory : IRedisConnectionFactory, IDisposable
     }
 
     public IDatabase GetDataBase()
-        => _connectionMultiplexer.GetDatabase();
+    {
+        return _connectionMultiplexer.GetDatabase();
+    }
 
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
         {
-            if (disposing)
-            {
-                _connectionMultiplexer?.Dispose();
-            }
+            if (disposing) _connectionMultiplexer?.Dispose();
 
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer
             // TODO: set large fields to null
