@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using Google.Protobuf;
 using Tgs.MessageQueue;
 using Tgs.Promotion.Clients.Protos;
@@ -29,14 +30,20 @@ public class DepositRuleReplyProcessor : IMessageProcessor
 
         var response = new CampaignDetailResponse
         {
-            CampaignDetail = JsonSerializer.Serialize(
-                settings,
-                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }),
-            BonusAmountLimit = settings.BonusAmountLimit,
-            Percentage = settings.Percentage,
-            TurnoverMultiple = settings.TurnoverMultiple,
-            GameType = settings.GameType.ToString()
-		};
+	        CampaignDetail = JsonSerializer.Serialize(
+		        settings,
+		        new JsonSerializerOptions
+		        {
+			        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			        WriteIndented = true,
+			        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+			        Converters = { new JsonStringEnumConverter() }
+		        }),
+	        BonusAmountLimit = settings.BonusAmountLimit,
+	        Percentage = settings.Percentage,
+	        TurnoverMultiple = settings.TurnoverMultiple,
+	        GameType = settings.GameType.ToString()
+        };
 
         return ValueTask.FromResult((ReadOnlyMemory<byte>)response.ToByteArray());
     }
