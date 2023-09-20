@@ -27,7 +27,11 @@ public class DepositRewardTests
 			fakePlayerBucketClient,
 			NullLogger<SendDepositRewardPromotionService>.Instance);
 
-		var rule = new DepositRewardRule(100, 10, 5, 100, null);
+		var rule = new DepositRewardRule(100,
+			10,
+			5,
+			100,
+			null);
 
 		var promotion = new Promotion
 		{
@@ -36,11 +40,7 @@ public class DepositRewardTests
 			CampaignDetail = JsonSerializer.Serialize(rule)
 		};
 
-		var depositForm = new DepositFormInfo
-		{
-			ActualAmount = 100,
-			Amount = 100
-		};
+		var depositForm = new DepositFormInfo { ActualAmount = 100, Amount = 100 };
 
 		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
 		_ = fakePaymentServiceClient.GetDepositFormAsync(Arg.Any<Guid>()).Returns(depositForm);
@@ -59,8 +59,11 @@ public class DepositRewardTests
 		_ = await sut.GetAsync(command);
 		// Assert
 		_ = fakePromotionBonusRepository.Received(1)
-			.CreatePromotionBonusAsync(Arg.Is(promotion), Arg.Is(command.PlayerCode), Arg.Is((decimal)33.3),
-				Arg.Is((decimal)1498.5), default);
+			.CreatePromotionBonusAsync(Arg.Is(promotion),
+				Arg.Is(command.PlayerCode),
+				Arg.Is((decimal)33.3),
+				Arg.Is((decimal)1498.5),
+				default);
 	}
 
 	[Test]
@@ -91,11 +94,7 @@ public class DepositRewardTests
 			CampaignDetail = JsonSerializer.Serialize(rule)
 		};
 
-		var depositForm = new DepositFormInfo
-		{
-			ActualAmount = 100,
-			Amount = 100
-		};
+		var depositForm = new DepositFormInfo { ActualAmount = 100, Amount = 100 };
 
 		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
 		_ = fakePaymentServiceClient.GetDepositFormAsync(Arg.Any<Guid>()).Returns(depositForm);
