@@ -34,8 +34,9 @@ public class DepositRuleReplyProcessor : IMessageProcessor
                 new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }),
             BonusAmountLimit = settings.BonusAmountLimit,
             Percentage = settings.Percentage,
-            TurnoverMultiple = settings.TurnoverMultiple
-        };
+            TurnoverMultiple = settings.TurnoverMultiple,
+            GameType = settings.GameType.ToString()
+		};
 
         return ValueTask.FromResult((ReadOnlyMemory<byte>)response.ToByteArray());
     }
