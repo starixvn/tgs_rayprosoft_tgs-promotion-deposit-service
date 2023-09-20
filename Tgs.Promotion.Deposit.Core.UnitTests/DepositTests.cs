@@ -21,7 +21,7 @@ public class DepositTests
             fakePlayerBucketForTypesClient,
             NullLogger<SendDepositPromotionService>.Instance);
 
-        var rule = new DepositRule("Sportsbook");
+        var rule = new DepositRule(new[]{ "Sportsbook" });
 
         var promotion = new Promotion
         {
@@ -68,7 +68,7 @@ public class DepositTests
             fakePlayerBucketForTypesClient,
             NullLogger<SendDepositPromotionService>.Instance);
 
-        var rule = new DepositRule("Sportsbook");
+        var rule = new DepositRule(new[] { "Sportsbook" });
 
         var promotion = new Promotion
         {
@@ -95,6 +95,6 @@ public class DepositTests
 
         // Assert
         await fakePlayerBucketForTypesClient.ReceivedWithAnyArgs(1)
-            .CreateBucketForBucketTypesAsync(null, 0, Service.PlayerBuckets.BucketType.None, null, null);
+            .CreateBucketForBucketTypesAsync("playerCode", 0, Service.PlayerBuckets.BucketType.None, null, null);
     }
 }

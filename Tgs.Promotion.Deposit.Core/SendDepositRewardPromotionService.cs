@@ -100,7 +100,7 @@ internal class
                         Service.PlayerBuckets.BucketType.Promotion,
                         promotionBonusPlayerId.ToString(),
                         "",
-                        rule.BucketType == null ? Enumerable.Empty<string>() : new[] { rule.BucketType },
+                        rule.BucketTypes,
                         cancellationToken)
                     .ConfigureAwait(false);
 
