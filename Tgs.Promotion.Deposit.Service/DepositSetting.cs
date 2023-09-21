@@ -8,5 +8,5 @@ public class DepositSetting
     public decimal BonusAmountLimit { get; set; }
     public decimal TurnoverMultiple { get; set; }
     public GameType? GameType { get; set; }
-	public string BucketType { get; set; } = string.Empty;
+	public IEnumerable<string>? BucketTypes { get; set; }
 }
