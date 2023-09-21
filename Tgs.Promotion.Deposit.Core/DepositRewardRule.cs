@@ -5,4 +5,4 @@ public record DepositRewardRule(
     decimal Percentage,
     decimal TurnoverMultiple,
     decimal DepositMinimumLimit,
-    string? BucketType);
+    IEnumerable<string>? BucketTypes);

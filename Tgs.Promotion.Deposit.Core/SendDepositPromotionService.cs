@@ -50,7 +50,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			cancellationToken);
 
 		var rule = JsonSerializer.Deserialize<DepositRule>(promotion.CampaignDetail,
-			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
         await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
             command.PlayerCode,
@@ -58,7 +58,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
             Service.PlayerBuckets.BucketType.Promotion,
             promotionBonusPlayerId.ToString(),
             "",
-            rule?.BucketType == null ? Enumerable.Empty<string>() : new[] { rule.BucketType },
+            rule.BucketTypes,
             cancellationToken).ConfigureAwait(false);
 
 		await _promotionBonusRepository.SendBonusAsync(

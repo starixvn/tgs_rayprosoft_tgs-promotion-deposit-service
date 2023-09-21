@@ -1,3 +1,3 @@
 ﻿namespace Tgs.Promotion.Deposit.Core;
 
-internal record DepositRule(string? BucketType);
+internal record DepositRule(IEnumerable<string>? BucketTypes);
