@@ -23,7 +23,7 @@ build-code:
 unit-test:
   stage: test
   script:
-    - dotnet test -c $BuildConfiguration -l:"junit;LogFilePath=../TestReports/{assembly}-TestReport.xml" --no-restore --no-build
+    - dotnet test "**/bin/$BuildConfiguration/$Framework/*Tests.dll" -l:'junit;LogFilePath=TestResults/TestResults.xml'
   needs:
     - build-code
   only:
