@@ -49,32 +49,32 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			bucketAmount,
 			cancellationToken);
 
-		if (promotion.AutoSentPlayerBonus)
-		{
-			var rule = JsonSerializer.Deserialize<DepositRule>(promotion.CampaignDetail,
-				new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+		if (!promotion.AutoSentPlayerBonus)
+			return new SendDepositPromotionResponse(promotionBonusPlayerId, bonusAmount);
 
-			await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
-				command.PlayerCode,
-				bucketAmount,
-				Service.PlayerBuckets.BucketType.Promotion,
-				promotionBonusPlayerId.ToString(),
-				"",
-				rule.BucketTypes,
-				cancellationToken).ConfigureAwait(false);
+		var rule = JsonSerializer.Deserialize<DepositRule>(promotion.CampaignDetail,
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
-			await _promotionBonusRepository.SendBonusAsync(
-				promotion,
-				bonusId,
-				command.DefaultWalletId,
-				bonusAmount,
-				command.UserId,
-				promotionBonusPlayerId.ToString(),
-				command.Remark,
-				cancellationToken);
-		}
+		await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
+			command.PlayerCode,
+			bucketAmount,
+			Service.PlayerBuckets.BucketType.Promotion,
+			promotionBonusPlayerId.ToString(),
+			"",
+			rule.BucketTypes,
+			cancellationToken).ConfigureAwait(false);
 
-		return new(promotionBonusPlayerId, bonusAmount);
+		await _promotionBonusRepository.SendBonusAsync(
+			promotion,
+			bonusId,
+			command.DefaultWalletId,
+			bonusAmount,
+			command.UserId,
+			promotionBonusPlayerId.ToString(),
+			command.Remark,
+			cancellationToken);
+
+		return new SendDepositPromotionResponse(promotionBonusPlayerId, bonusAmount);
 	}
 
 	private static (decimal bonusAmount, decimal bucketAmount) CalculateAmount(Promotion promotion,
