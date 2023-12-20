@@ -6,10 +6,6 @@ using Tgs.Promotion.Deposit.Service.MessageReply;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration
-    .AddJsonFile("/config/appsettings.json", true)
-    .AddEnvironmentVariables();
-
 builder.Services
 	.AddMessageQueue()
 	.AddNatsMessageQueue(natsConfig => natsConfig
