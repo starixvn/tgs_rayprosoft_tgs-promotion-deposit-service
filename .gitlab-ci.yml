@@ -21,23 +21,7 @@ build-code:
   extends: .build-code-template
 
 unit-test:
-  stage: test
-  script:
-    - dotnet test "**/bin/$BuildConfiguration/$Framework/*Tests.dll" -l:'junit;LogFilePath=TestResults/TestResults.xml'
-  needs:
-    - build-code
-  only:
-    - merge_requests
-    - main
-  cache:
-    key: BuildCacheKey
-    untracked: true
-    policy: pull
-  artifacts:
-    when: always
-    reports:
-      junit: ./TestReports/*-TestReport.xml
-
+  extends: .unit-test-template
 
 push-docker-image:
   extends: .push-docker-image-template
