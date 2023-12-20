@@ -21,7 +21,22 @@ build-code:
   extends: .build-code-template
 
 unit-test:
-  extends: .unit-test-template
+  stage: test
+  script:
+    - dotnet test -c $BuildConfiguration -l:"junit;LogFilePath=../TestReports/{assembly}-TestReport.xml" --no-restore --no-build
+  needs:
+    - build-code
+  only:
+    - merge_requests
+    - main
+  cache:
+    key: Agent.$CI_PIPELINE_ID
+    untracked: true
+    policy: pull
+  artifacts:
+    when: always
+    reports:
+      junit: ./TestReports/*-TestReport.xml
 
 push-docker-image:
   extends: .push-docker-image-template
