@@ -49,17 +49,20 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			bucketAmount,
 			cancellationToken);
 
+		if (!promotion.AutoSentPlayerBonus)
+			return new SendDepositPromotionResponse(promotionBonusPlayerId, bonusAmount);
+
 		var rule = JsonSerializer.Deserialize<DepositRule>(promotion.CampaignDetail,
 			new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
-        await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
-            command.PlayerCode,
-            bucketAmount,
-            Service.PlayerBuckets.BucketType.Promotion,
-            promotionBonusPlayerId.ToString(),
-            "",
-            rule.BucketTypes,
-            cancellationToken).ConfigureAwait(false);
+		await _playerBucketForTypesClient.CreateBucketForBucketTypesAsync(
+			command.PlayerCode,
+			bucketAmount,
+			Service.PlayerBuckets.BucketType.Promotion,
+			promotionBonusPlayerId.ToString(),
+			"",
+			rule.BucketTypes,
+			cancellationToken).ConfigureAwait(false);
 
 		await _promotionBonusRepository.SendBonusAsync(
 			promotion,
@@ -71,7 +74,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 			command.Remark,
 			cancellationToken);
 
-		return new(promotionBonusPlayerId, bonusAmount);
+		return new SendDepositPromotionResponse(promotionBonusPlayerId, bonusAmount);
 	}
 
 	private static (decimal bonusAmount, decimal bucketAmount) CalculateAmount(Promotion promotion,

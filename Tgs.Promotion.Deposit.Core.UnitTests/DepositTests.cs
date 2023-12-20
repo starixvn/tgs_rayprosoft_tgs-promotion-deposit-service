@@ -75,7 +75,8 @@ public class DepositTests
             Percentage = 10,
             BonusAmountLimit = 100,
             TurnoverMultiple = 5,
-            CampaignDetail = JsonSerializer.Serialize(rule)
+            AutoSentPlayerBonus = true,
+			CampaignDetail = JsonSerializer.Serialize(rule)
         };
 
         _ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
