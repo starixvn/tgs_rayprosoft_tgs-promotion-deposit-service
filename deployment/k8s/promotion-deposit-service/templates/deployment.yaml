@@ -59,7 +59,7 @@ spec:
               value: /diag/port
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           volumeMounts:
             - mountPath: /config/appsettings.json
