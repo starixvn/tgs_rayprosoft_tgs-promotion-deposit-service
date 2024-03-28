@@ -11,6 +11,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 	private readonly IPlayerBucketForTypesClient _playerBucketForTypesClient;
 	private readonly IPromotionBonusRepository _promotionBonusRepository;
 	private readonly IPromotionRepository _promotionRepository;
+	private static readonly string[] _AllowDistributePromotionTypes = ["DailySecondDeposit", "DailyFirstDeposit"];
 
 	public SendDepositPromotionService(
 		IPromotionRepository promotionRepository,
@@ -37,6 +38,11 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 		{
 			_logger.LogError("promotion is not found. ({command.PromotionId})", command.PromotionId);
 
+			return new(null, 0);
+		}
+
+		if (!_AllowDistributePromotionTypes.Contains(promotion.PromotionType))
+		{
 			return new(null, 0);
 		}
 
