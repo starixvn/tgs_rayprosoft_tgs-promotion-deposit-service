@@ -15,8 +15,8 @@ builder.Services
 
 			options.Url = config.GetConnectionString("Nats")!;
 		})
-		.AddProcessor<DepositRuleReplyProcessor>("tgs.promotion.firstdeposit.setting",
-			"tgs.promotion.firstdeposit.setting")
+		//.AddProcessor<DepositRuleReplyProcessor>("tgs.promotion.firstdeposit.setting",
+		//	"tgs.promotion.firstdeposit.setting")
 		.AddProcessor<DepositRuleReplyProcessor>("tgs.promotion.dailyfirstdeposit.setting",
 			"tgs.promotion.dailyfirstdeposit.setting")
 		.AddProcessor<DepositRuleReplyProcessor>("tgs.promotion.dailyseconddeposit.setting",
