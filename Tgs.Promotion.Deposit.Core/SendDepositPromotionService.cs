@@ -11,7 +11,7 @@ internal class SendDepositPromotionService : IGetService<SendDepositPromotion, S
 	private readonly IPlayerBucketForTypesClient _playerBucketForTypesClient;
 	private readonly IPromotionBonusRepository _promotionBonusRepository;
 	private readonly IPromotionRepository _promotionRepository;
-	private static readonly string[] _AllowDistributePromotionTypes = ["DailySecondDeposit"];
+	private static readonly string[] _AllowDistributePromotionTypes = [];
 
 	public SendDepositPromotionService(
 		IPromotionRepository promotionRepository,
