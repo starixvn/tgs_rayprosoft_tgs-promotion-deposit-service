@@ -1,9 +1,9 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using Tgs.Calculate.Clients;
 using Tgs.Payment.Clients;
-using Tgs.PlayerBucket.Client;
 using Tgs.Promotion.Clients;
+using Tgs.Promotion.Deposit.Core.ApplicationServices;
 
 namespace Tgs.Promotion.Deposit.Core.UnitTests;
 
@@ -13,167 +13,49 @@ public class DepositRewardTests
 	public async Task Deposit()
 	{
 		// Arrange
-		var fakePlayerBucketClient = Substitute.For<IPlayerBucketForTypesClient>();
-		var fakePaymentServiceClient = Substitute.For<IPaymentServiceClient>();
 		var fakePromotionServiceClient = Substitute.For<IPromotionServiceClient>();
-		var fakePromotionRepository = Substitute.For<IPromotionRepository>();
-		var fakePromotionBonusRepository = Substitute.For<IPromotionBonusRepository>();
+		var fakeTgsRepository = Substitute.For<ITgsRepository>();
+		var fakeCalculateClient = Substitute.For<ICalculateClient>();
 
-		var sut = new SendDepositRewardPromotionService(
-			fakePromotionRepository,
-			fakePromotionBonusRepository,
+		var sut = new DistributeDepositRewardBonusCommandService(
 			fakePromotionServiceClient,
-			fakePaymentServiceClient,
-			fakePlayerBucketClient,
-			NullLogger<SendDepositRewardPromotionService>.Instance);
+			fakeTgsRepository,
+			fakeCalculateClient,
+			NullLogger<DistributeDepositRewardBonusCommandService>.Instance);
 
-		var rule = new DepositRewardRule(100,
-			10,
-			5,
-			100,
-			Enumerable.Empty<string>());
-
-		var promotion = new Promotion
+		_ = fakePromotionServiceClient.GetPromotionMainInfoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(new PromotionMainInfo
 		{
-			Unlimited = 1,
-			TotalAmountLimit = 0,
-			CampaignDetail = JsonSerializer.Serialize(rule)
-		};
+			Id = Guid.NewGuid(),
+			PromotionType = "DepositReward"
+		});
 
-		var depositForm = new DepositFormInfo { ActualAmount = 100, Amount = 100 };
+		_ = fakePromotionServiceClient.GetPromotionRuleAsync<PromotionRule>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+			.Returns(new PromotionRule(new DepositRewardSetting(10, 10, 10, 10, [], [])));
 
-		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
-		_ = fakePaymentServiceClient.GetDepositFormAsync(Arg.Any<Guid>()).Returns(depositForm);
+		_ = fakePromotionServiceClient
+			.GetPromotionDistributePlanAsync(Arg.Any<Guid>(), Arg.Any<long>(), Arg.Any<CancellationToken>())
+			.Returns(new PromotionDistributePlanInfo(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 10));
 
-		var command = new SendDepositRewardPromotion(
-			Guid.NewGuid(),
-			Guid.NewGuid(),
-			"playerCode",
-			Guid.NewGuid(),
-			333,
-			"",
-			Guid.NewGuid(),
-			null);
+		_ = fakeTgsRepository.GetPromotionCalculateIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(Guid.NewGuid());
+
+		_ = fakeCalculateClient.ExchangeAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
+			.Returns(new ExchangeResult(Guid.NewGuid(), 10));
+
+		var command = new DistributeDepositRewardBonusCommand(
+			new DepositFormInfo
+			{
+				Id = Guid.NewGuid(),
+				ApplyAmount = 10,
+				PlayerCode = "playerCode",
+				PromotionId = Guid.NewGuid()
+			});
 
 		// Act
-		_ = await sut.GetAsync(command);
+		await sut.ExecuteAsync(command);
 		// Assert
-		_ = fakePromotionBonusRepository.Received(1)
-			.CreatePromotionBonusAsync(Arg.Is(promotion),
-				Arg.Is(command.PlayerCode),
-				Arg.Is((decimal)33.3),
-				Arg.Is((decimal)1498.5),
-				default);
-	}
+		_ = fakePromotionServiceClient.ReceivedWithAnyArgs()
+			.DistributePromotionBonusAsync(default, null, 0, 0, null, null, null, default);
 
-	[Test]
-	public async Task Add_Player_Bucket()
-	{
-		// Arrange
-		var fakePlayerBucketForTypesClient = Substitute.For<IPlayerBucketForTypesClient>();
-		var fakePaymentServiceClient = Substitute.For<IPaymentServiceClient>();
-		var fakePromotionServiceClient = Substitute.For<IPromotionServiceClient>();
-		var fakePromotionRepository = Substitute.For<IPromotionRepository>();
-		var fakePromotionBonusRepository = Substitute.For<IPromotionBonusRepository>();
-
-		var sut = new SendDepositRewardPromotionService(
-			fakePromotionRepository,
-			fakePromotionBonusRepository,
-			fakePromotionServiceClient,
-			fakePaymentServiceClient,
-			fakePlayerBucketForTypesClient,
-			NullLogger<SendDepositRewardPromotionService>.Instance);
-
-		var rule = new DepositRewardRule(100, 10, 5, 100, new[]{ "Sportsbook" });
-
-		var promotion = new Promotion
-		{
-			Unlimited = 1,
-			TotalAmountLimit = 0,
-			AutoSentPlayerBonus = true,
-			CampaignDetail = JsonSerializer.Serialize(rule)
-		};
-
-		var depositForm = new DepositFormInfo { ActualAmount = 100, Amount = 100 };
-
-		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
-		_ = fakePaymentServiceClient.GetDepositFormAsync(Arg.Any<Guid>()).Returns(depositForm);
-
-		var command = new SendDepositRewardPromotion(
-			Guid.NewGuid(),
-			Guid.NewGuid(),
-			"playerCode",
-			Guid.NewGuid(),
-			333,
-			"",
-			Guid.NewGuid(),
-			null);
-
-		// Act
-		_ = await sut.GetAsync(command);
-		// Assert
-		await fakePlayerBucketForTypesClient.ReceivedWithAnyArgs(1)
-			.CreateBucketForBucketTypesAsync("playerCode", 0, Service.PlayerBuckets.BucketType.None, null, null);
-	}
-
-	[Test]
-	public async Task Add_Player_Bucket_By_Bucket_Type()
-	{
-		// Arrange
-		var fakePlayerBucketForTypesClient = Substitute.For<IPlayerBucketForTypesClient>();
-		var fakePaymentServiceClient = Substitute.For<IPaymentServiceClient>();
-		var fakePromotionServiceClient = Substitute.For<IPromotionServiceClient>();
-		var fakePromotionRepository = Substitute.For<IPromotionRepository>();
-		var fakePromotionBonusRepository = Substitute.For<IPromotionBonusRepository>();
-
-		var sut = new SendDepositRewardPromotionService(
-			fakePromotionRepository,
-			fakePromotionBonusRepository,
-			fakePromotionServiceClient,
-			fakePaymentServiceClient,
-			fakePlayerBucketForTypesClient,
-			NullLogger<SendDepositRewardPromotionService>.Instance);
-
-		var bucketTypes = new[] { "Sportsbook" };
-
-		var rule = new DepositRewardRule(100, 10, 5, 100, bucketTypes);
-
-		var promotion = new Promotion
-		{
-			Unlimited = 1,
-			TotalAmountLimit = 0,
-			AutoSentPlayerBonus = true,
-			CampaignDetail = JsonSerializer.Serialize(rule)
-		};
-
-		var depositForm = new DepositFormInfo { ActualAmount = 100, Amount = 100 };
-
-		_ = fakePromotionRepository.GetPromotionWithCacheAsync(Arg.Any<Guid>()).Returns(promotion);
-		_ = fakePaymentServiceClient.GetDepositFormAsync(Arg.Any<Guid>()).Returns(depositForm);
-
-		var command = new SendDepositRewardPromotion(
-			Guid.NewGuid(),
-			Guid.NewGuid(),
-			"playerCode",
-			Guid.NewGuid(),
-			333,
-			"",
-			Guid.NewGuid(),
-			null);
-
-		// Act
-		_ = await sut.GetAsync(command);
-		// Assert
-		var bucketAmount =
-			(command.DepositAmount + rule.Percentage * command.DepositAmount / 100M) * rule.TurnoverMultiple -
-			command.DepositAmount;
-
-		await fakePlayerBucketForTypesClient.Received(1)
-			.CreateBucketForBucketTypesAsync(Arg.Is(command.PlayerCode),
-				Arg.Is(bucketAmount),
-				Arg.Is(Service.PlayerBuckets.BucketType.Promotion),
-				Arg.Any<string>(),
-				Arg.Is(""),
-				Arg.Is<IEnumerable<string>>(x => bucketTypes.SequenceEqual(x)));
+		_ = fakePromotionServiceClient.ReceivedWithAnyArgs().UpdatePromotionUsedAmountAsync(default, 0, null, default);
 	}
 }
