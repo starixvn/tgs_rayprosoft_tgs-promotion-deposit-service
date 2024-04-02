@@ -41,13 +41,13 @@ builder.Services
 			.UseNpgsql("name=Tgs"),
 		sp => sp.GetRequiredKeyedService<IDatabase>("Redis"))
 	.AddPromotionClientServices((opts, _) => opts.Url =
-		builder.Configuration.GetValue<Uri>("DailyFirstDeposit:PromotionServiceBaseUrl")!)
+		builder.Configuration.GetValue<Uri>("DepositReward:PromotionServiceBaseUrl")!)
 	.AddPaymentServiceClient(httpBuilder => httpBuilder
 		.ConfigureHttpClient(httpClient => httpClient.BaseAddress =
-			builder.Configuration.GetValue<Uri>("DailyFirstDeposit:PaymentServiceBaseUrl")!))
+			builder.Configuration.GetValue<Uri>("DepositReward:PaymentServiceBaseUrl")!))
 	.AddCalculateClient(httpBuilder => httpBuilder
 		.ConfigureHttpClient(httpClient => httpClient.BaseAddress =
-			builder.Configuration.GetValue<Uri>("DailyFirstDeposit:CalculateServiceBaseUrl")!))
+			builder.Configuration.GetValue<Uri>("DepositReward:CalculateServiceBaseUrl")!))
 	.AddMemoryCache();
 
 var instrumentationExtensionFilters = new[] { "html", "ico", "png", "jpg" };
