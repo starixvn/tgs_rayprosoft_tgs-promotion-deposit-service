@@ -6,11 +6,10 @@ metadata:
 data:
   appsettings.json: |
     {
-      "Promotion": {
-        "PaymentServiceUrl": "http://payment-api",
-        "Url": "http://promotion-api",
-        "CashBaseUrl": "http://cashservice-api",
-        "PlayerBucketBaseUrl": "http://tgs-playerbucket-service"
+      "DepositReward": {
+        "PromotionServiceBaseUrl": "http://promotion-api",
+        "PaymentServiceBaseUrl": "http://payment-api",
+        "CalculateServiceBaseUrl": "http://tgs-calculate-api"
       }
     }
   otel-collector-config.yaml: |
