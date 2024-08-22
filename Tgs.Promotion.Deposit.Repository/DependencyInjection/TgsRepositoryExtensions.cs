@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using StackExchange.Redis;
 using Tgs.Promotion.Deposit.Core;
-using Tgs.Promotion.Deposit.Repository.Entities;
+using Tgs.Promotion.Deposit.Repository;
+using Tgs.Promotion.Register.Repository.Entities;
 
-namespace Tgs.Promotion.Deposit.Repository.DependencyInjection;
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class TgsRepositoryExtensions
 {
@@ -13,15 +12,18 @@ public static class TgsRepositoryExtensions
         return services
             .AddDbContext<TgsContext>(options => options
                 .UseNpgsql(connectionString))
-            .AddScoped<ITgsRepository, TgsRepository>();
+            .AddTransient<IPromotionRepository, PromotionRepository>()
+            .AddTransient<IPromotionBonusRepository, PromotionBonusRepository>();
     }
 
-    public static IServiceCollection AddDepositRewardRepositories(
-	    this IServiceCollection services,
-	    Action<DbContextOptionsBuilder> dbConfigure,
-	    Func<IServiceProvider, IDatabase> resolveRedisDatabase)
-	    => services
-		    .AddDbContext<TgsContext>(dbConfigure)
-		    .AddScoped<ITgsRepository, TgsRepository>();
-
+    public static IServiceCollection AddRedis(
+        this IServiceCollection service,
+        Action<RedisOptions, IServiceProvider> configure)
+    {
+        return service
+            .AddOptions<RedisOptions>()
+            .Configure(configure)
+            .Services
+            .AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
+    }
 }
