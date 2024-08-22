@@ -1,5 +1,5 @@
 ﻿{
-   "CodeGenerationMode": 4,
+   "CodeGenerationMode": 2,
    "ContextClassName": "TgsContext",
    "ContextNamespace": "Entities",
    "DefaultDacpacSchema": null,
@@ -9,37 +9,53 @@
    "OutputContextPath": "Entities",
    "OutputPath": "Entities\\Models",
    "PreserveCasingWithRegex": true,
-   "ProjectRootNamespace": "Tgs.Promotion.Deposit.Repository",
+   "ProjectRootNamespace": "Tgs.Promotion.Register.Repository",
    "Schemas": null,
    "SelectedHandlebarsLanguage": 0,
    "SelectedToBeGenerated": 0,
-   "T4TemplatePath": null,
    "Tables": [
       {
-         "Name": "dbo.deposit_promotion_calculate_pairs",
+         "Name": "dbo.promotion_bonuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotion_participants",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotion_players",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotion_vip_levels",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.promotions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "dbo.transaction_promotions",
          "ObjectType": 0
       }
    ],
-   "UiHint": "tgs",
-   "UncountableWords": null,
+   "UiHint": "tgs-local",
    "UseBoolPropertiesWithoutDefaultSql": false,
    "UseDatabaseNames": false,
-   "UseDateOnlyTimeOnly": true,
    "UseDbContextSplitting": true,
-   "UseDecimalDataAnnotationForSprocResult": true,
    "UseFluentApiOnly": true,
    "UseHandleBars": false,
    "UseHierarchyId": false,
    "UseInflector": true,
-   "UseLegacyPluralizer": false,
+   "UseLegacyPluralizer": true,
    "UseManyToManyEntity": true,
+   "UseNoConstructor": true,
    "UseNoDefaultConstructor": false,
    "UseNoNavigations": false,
    "UseNoObjectFilter": false,
    "UseNodaTime": false,
    "UseNullableReferences": true,
    "UseSchemaFolders": true,
-   "UseSchemaNamespaces": false,
    "UseSpatial": true,
    "UseT4": false
 }
